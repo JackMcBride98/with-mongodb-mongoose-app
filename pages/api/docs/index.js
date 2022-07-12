@@ -17,6 +17,7 @@ export default async function handler(req, res) {
       break;
     case 'POST':
       try {
+        console.log(req.body);
         const doc = await Doc.create(
           req.body
         ); /* create a new model in the database */
