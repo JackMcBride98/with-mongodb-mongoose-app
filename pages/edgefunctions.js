@@ -1,18 +1,37 @@
 import Link from 'next/link';
-import dbConnect from '../lib/dbConnect';
-import Doc from '../models/Doc';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-export default function SsrPage({ docus }) {
+export default function EdgeFunctionsPage() {
+  const [docs, setDocs] = useState([]);
   const [name, setName] = useState('');
-  const [docs, setDocs] = useState(docus);
   const [description, setDescription] = useState('');
   const contentType = 'application/json';
+  useEffect(() => {
+    const getDocs = async () => {
+      try {
+        const res = await fetch('/api/docsedge', {
+          method: 'GET',
+          headers: {
+            Accept: contentType,
+            'Content-Type': contentType,
+          },
+        }).then((res) => res.json());
+        if (res.success) {
+          setDocs(res.data);
+        }
+        console.log(res);
+      } catch (error) {
+        console.log('error');
+        console.log(error);
+      }
+    };
+    getDocs();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('/api/docs', {
+      const res = await fetch('/api/docsedge', {
         method: 'POST',
         headers: {
           Accept: contentType,
@@ -20,6 +39,7 @@ export default function SsrPage({ docus }) {
         },
         body: JSON.stringify({ name, description }),
       }).then((res) => res.json());
+      console.log(res);
       if (res.success) {
         setDocs((docs) => [...docs, res.data]);
       }
@@ -31,10 +51,11 @@ export default function SsrPage({ docus }) {
 
   const handleDelete = async (id) => {
     try {
-      const res = await fetch(`/api/docs/${id}`, {
+      const res = await fetch(`/api/docsedge/${id}`, {
         method: 'Delete',
       }).then((res) => res.json());
       if (res.success) {
+        console.log('success');
         setDocs((docs) => docs.filter((doc) => doc._id !== id));
       }
     } catch (error) {
@@ -42,13 +63,15 @@ export default function SsrPage({ docus }) {
     }
   };
 
+  console.log(docs);
+
   return (
     <div className="flex flex-col items-center">
       <Link href="/">
         <a>Home</a>
       </Link>
-      <p className="m-auto font-bold text-2xl">SSR</p>
-      <p>Docs</p>
+      <h1 className="m-auto font-bold text-2xl">CSR</h1>
+      <p>Edge Functions</p>
       {docs?.length > 0 ? <p>There are docs</p> : <p>No docs</p>}
       <ul>
         {docs?.length > 0 &&
@@ -94,22 +117,4 @@ export default function SsrPage({ docus }) {
       </form>
     </div>
   );
-}
-
-export async function getServerSideProps({ req, res }) {
-  res.setHeader(
-    'Cache-Control',
-    'public, s-maxage=10, stale-while-revalidate=59'
-  );
-  await dbConnect();
-
-  /* find all the data in our database */
-  const result = await Doc.find({});
-  const docs = result.map((doc) => {
-    const doc2 = doc.toObject();
-    doc2._id = doc._id.toString();
-    return doc2;
-  });
-
-  return { props: { docus: docs } };
 }

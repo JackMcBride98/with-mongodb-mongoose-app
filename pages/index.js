@@ -21,7 +21,7 @@ const Index = ({ pets }) => (
         </Link>
       </li>
       <li>
-        <Link href="/edge-functions">
+        <Link href="/edgefunctions">
           <a>Edge functions</a>
         </Link>
       </li>
